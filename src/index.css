@@ -1,1 +1,42 @@
 @import "tailwindcss";
+
+/* ─── Clash Display — used for headings ─────────────────────────── */
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/ClashDisplay-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─── Clash Grotesk — used for body text and UI labels ──────────── */
+@font-face {
+  font-family: 'Clash Grotesk';
+  src: url('/fonts/ClashGrotesk-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Clash Grotesk';
+  src: url('/fonts/ClashGrotesk-Semibold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─── ForgingFlow brand theme ────────────────────────────────────── */
+@theme {
+  /* Colors */
+  --color-flow-orange: #FF6919;
+  --color-ember-drift: #993F0F;
+  --color-amber-dusk: #201A18;
+  --color-amber-dusk-darker: #362D29;
+  --color-flow-blue: #1A5F7A;
+  --color-flow-blue-darker: #123F52;
+
+  /* Fonts — overrides Tailwind's default sans stack */
+  --font-sans: 'Clash Grotesk', sans-serif;
+  --font-display: 'Clash Display', sans-serif;
+}

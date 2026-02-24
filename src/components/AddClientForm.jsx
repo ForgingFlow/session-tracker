@@ -31,12 +31,12 @@ export default function AddClientForm({ onAdd, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-900 rounded-xl p-5 border border-gray-700">
-      <h2 className="text-white font-semibold text-lg mb-4">New Client</h2>
+    <form onSubmit={handleSubmit} className="bg-amber-dusk-darker rounded-xl p-5 border border-white/10">
+      <h2 className="text-white font-semibold text-lg mb-4 font-display">New Client</h2>
 
       <div className="flex flex-col gap-4">
         <div>
-          <label className="block text-sm text-gray-400 mb-1.5">Name</label>
+          <label className="block text-sm text-white/60 mb-1.5">Name</label>
           <input
             ref={nameRef}
             type="text"
@@ -44,16 +44,16 @@ export default function AddClientForm({ onAdd, onCancel }) {
             onChange={e => setName(e.target.value)}
             placeholder="Client name"
             required
-            className="w-full bg-gray-800 text-white placeholder-gray-600 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:outline-none focus:border-emerald-500"
+            className="w-full bg-amber-dusk text-white placeholder-white/25 rounded-lg px-3 py-2 text-sm border border-white/15 focus:outline-none focus:border-flow-orange"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-1.5">Program</label>
+          <label className="block text-sm text-white/60 mb-1.5">Program</label>
           <select
             value={program}
             onChange={e => setProgram(e.target.value)}
-            className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:outline-none focus:border-emerald-500"
+            className="w-full bg-amber-dusk text-white rounded-lg px-3 py-2 text-sm border border-white/15 focus:outline-none focus:border-flow-orange"
           >
             {PROGRAMS.map(p => (
               <option key={p} value={p}>{p}</option>
@@ -62,7 +62,7 @@ export default function AddClientForm({ onAdd, onCancel }) {
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-1.5">Total Sessions</label>
+          <label className="block text-sm text-white/60 mb-1.5">Total Sessions</label>
           <input
             type="number"
             value={totalSessions}
@@ -70,7 +70,7 @@ export default function AddClientForm({ onAdd, onCancel }) {
             min={1}
             max={52}
             required
-            className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:outline-none focus:border-emerald-500"
+            className="w-full bg-amber-dusk text-white rounded-lg px-3 py-2 text-sm border border-white/15 focus:outline-none focus:border-flow-orange"
           />
         </div>
       </div>
@@ -78,14 +78,14 @@ export default function AddClientForm({ onAdd, onCancel }) {
       <div className="flex gap-3 mt-5">
         <button
           type="submit"
-          className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg py-2 text-sm transition-colors"
+          className="flex-1 bg-flow-orange hover:bg-ember-drift text-white font-semibold rounded-lg py-2 text-sm transition-colors"
         >
           Add Client
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-lg py-2 text-sm transition-colors"
+          className="flex-1 bg-white/5 hover:bg-white/10 text-white/70 font-semibold rounded-lg py-2 text-sm transition-colors"
         >
           Cancel
         </button>

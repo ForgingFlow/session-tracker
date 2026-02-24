@@ -4,6 +4,8 @@ import ClientCard from './components/ClientCard'
 import AddClientForm from './components/AddClientForm'
 import FilterBar from './components/FilterBar'
 import StatsBar from './components/StatsBar'
+import LogSessionModal from './components/LogSessionModal'
+import SessionHistoryModal from './components/SessionHistoryModal'
 
 function startOfWeek() {
   const d = new Date()
@@ -20,9 +22,9 @@ const SAMPLE_CLIENTS = [
     sessionsCompleted: 8,
     totalSessions: 12,
     lastSession: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    sessionDates: [
-      new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    sessions: [
+      { id: 1, date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), note: '' },
+      { id: 2, date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), note: '' },
     ],
   },
   {
@@ -32,8 +34,8 @@ const SAMPLE_CLIENTS = [
     sessionsCompleted: 3,
     totalSessions: 8,
     lastSession: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    sessionDates: [
-      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    sessions: [
+      { id: 3, date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), note: '' },
     ],
   },
   {
@@ -43,7 +45,7 @@ const SAMPLE_CLIENTS = [
     sessionsCompleted: 12,
     totalSessions: 12,
     lastSession: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-    sessionDates: [],
+    sessions: [],
   },
 ]
 
@@ -51,13 +53,24 @@ function App() {
   const [clients, setClients] = useState(() => {
     try {
       const saved = localStorage.getItem('session-tracker-clients')
-      return saved ? JSON.parse(saved) : SAMPLE_CLIENTS
+      if (!saved) return SAMPLE_CLIENTS
+      const parsed = JSON.parse(saved)
+      return parsed.map(c => {
+        if (c.sessions) return c
+        return {
+          ...c,
+          sessions: (c.sessionDates ?? []).map(d => ({ id: new Date(d).getTime(), date: d, note: '' })),
+          sessionDates: undefined,
+        }
+      })
     } catch {
       return SAMPLE_CLIENTS
     }
   })
   const [showForm, setShowForm] = useState(false)
   const [filter, setFilter] = useState('All')
+  const [logSessionModal, setLogSessionModal] = useState(null)
+  const [historyModal, setHistoryModal] = useState(null)
 
   useEffect(() => {
     localStorage.setItem('session-tracker-clients', JSON.stringify(clients))
@@ -69,7 +82,7 @@ function App() {
     total: clients.length,
     active: clients.filter(c => c.sessionsCompleted < c.totalSessions).length,
     sessionsThisWeek: clients.reduce((sum, c) =>
-      sum + c.sessionDates.filter(d => new Date(d) >= weekStart).length, 0
+      sum + c.sessions.filter(s => new Date(s.date) >= weekStart).length, 0
     ),
   }
 
@@ -80,7 +93,7 @@ function App() {
   })
 
   function handleAddClient(newClient) {
-    setClients(prev => [...prev, { ...newClient, sessionDates: [] }])
+    setClients(prev => [...prev, { ...newClient, sessions: [] }])
     setShowForm(false)
   }
 
@@ -88,7 +101,7 @@ function App() {
     setClients(prev => prev.filter(c => c.id !== id))
   }
 
-  function handleLogSession(id) {
+  function handleLogSession(id, note) {
     const now = new Date().toISOString()
     setClients(prev =>
       prev.map(c =>
@@ -97,25 +110,37 @@ function App() {
               ...c,
               sessionsCompleted: c.sessionsCompleted + 1,
               lastSession: now,
-              sessionDates: [...c.sessionDates, now],
+              sessions: [...c.sessions, { id: Date.now(), date: now, note: note ?? '' }],
             }
           : c
       )
     )
+    setLogSessionModal(null)
   }
 
+  const logSessionClient = clients.find(c => c.id === logSessionModal)
+  const historyClient = clients.find(c => c.id === historyModal)
+
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100">
+    <div className="min-h-screen bg-amber-dusk text-white">
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <header className="flex items-center justify-between mb-6">
+
+        {/* Header */}
+        <header className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-white">Session Tracker</h1>
-            <p className="text-gray-400 text-sm mt-1">Movement coaching client progress</p>
+            <img
+              src="/images/FF_InlineWithLogo.png"
+              alt="ForgingFlow"
+              className="h-8"
+            />
+            <p className="text-white/50 text-sm mt-1.5 font-sans">
+              Movement coaching client progress
+            </p>
           </div>
           {!showForm && (
             <button
               onClick={() => setShowForm(true)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg px-4 py-2 text-sm transition-colors"
+              className="bg-flow-orange hover:bg-ember-drift text-white font-semibold rounded-lg px-4 py-2 text-sm transition-colors"
             >
               + New Client
             </button>
@@ -137,12 +162,29 @@ function App() {
             <ClientCard
               key={client.id}
               client={client}
-              onLogSession={() => handleLogSession(client.id)}
+              onLogSession={() => setLogSessionModal(client.id)}
+              onViewHistory={() => setHistoryModal(client.id)}
               onDelete={() => handleDeleteClient(client.id)}
             />
           ))}
         </div>
       </div>
+
+      {logSessionModal !== null && logSessionClient && (
+        <LogSessionModal
+          clientName={logSessionClient.name}
+          onConfirm={note => handleLogSession(logSessionModal, note)}
+          onCancel={() => setLogSessionModal(null)}
+        />
+      )}
+
+      {historyModal !== null && historyClient && (
+        <SessionHistoryModal
+          clientName={historyClient.name}
+          sessions={historyClient.sessions}
+          onClose={() => setHistoryModal(null)}
+        />
+      )}
     </div>
   )
 }
