@@ -30,7 +30,7 @@
 /* iOS auto-zooms when any focused input has font-size < 16px.        */
 /* This unlayered rule wins over Tailwind utility layers.             */
 @media (max-width: 640px) {
-  input, textarea, select { font-size: 16px; }
+  input, textarea, select { font-size: 16px !important; }
 }
 
 /* ─── ForgingFlow brand theme ────────────────────────────────────── */

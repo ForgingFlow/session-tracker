@@ -18,10 +18,10 @@ export default function ViewSessionModal({ clientName, session, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-[60]"
+      className="fixed inset-0 bg-black/70 flex flex-col sm:flex-row sm:items-center sm:justify-center z-[60]"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-amber-dusk-darker rounded-t-2xl sm:rounded-xl p-6 border border-white/10 w-full sm:max-w-sm sm:mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-amber-dusk-darker rounded-t-2xl sm:rounded-xl p-6 border border-white/10 w-full sm:max-w-sm sm:mx-4 max-h-[90vh] overflow-y-auto mt-auto sm:mt-0">
         <p className="text-flow-orange text-xs font-semibold uppercase tracking-wide">{formattedDate}</p>
         <h2 className="text-white font-semibold text-lg font-display mt-0.5 mb-4">{clientName}</h2>
 
