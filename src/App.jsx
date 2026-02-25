@@ -147,20 +147,31 @@ function App() {
     }
   }
 
-  async function handleLogSession(id, note) {
+  async function handleLogSession(id, note, date) {
     const client = clients.find(c => c.id === id)
     if (!client) return
 
+    // Use the date chosen in the modal (YYYY-MM-DD). Convert to a full ISO
+    // timestamp at noon local time so sorting stays intuitive.
+    const sessionDate = date
+      ? new Date(date + 'T12:00:00').toISOString()
+      : new Date().toISOString()
     const now = new Date().toISOString()
-    const updatedSessions = [...client.sessions, { id: Date.now(), date: now, note: note ?? '' }]
+
+    const updatedSessions = [...client.sessions, { id: Date.now(), date: sessionDate, note: note ?? '' }]
     const updatedCompleted = client.sessionsCompleted + 1
+
+    // last_session should always reflect the most recent session date
+    const lastSession = updatedSessions.reduce((latest, s) =>
+      s.date > latest ? s.date : latest, ''
+    )
 
     setError(null)
     const { data, error } = await supabase
       .from('clients')
       .update({
         sessions_completed: updatedCompleted,
-        last_session: now,
+        last_session: lastSession,
         sessions: updatedSessions,
         updated_at: now,
       })
@@ -276,7 +287,7 @@ function App() {
       {logSessionModal !== null && logSessionClient && (
         <LogSessionModal
           clientName={logSessionClient.name}
-          onConfirm={note => handleLogSession(logSessionModal, note)}
+          onConfirm={(note, date) => handleLogSession(logSessionModal, note, date)}
           onCancel={() => setLogSessionModal(null)}
         />
       )}

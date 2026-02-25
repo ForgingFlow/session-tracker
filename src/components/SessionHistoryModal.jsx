@@ -9,7 +9,7 @@ export default function SessionHistoryModal({ clientName, sessions, onClose }) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  const reversed = [...sessions].reverse()
+  const sorted = [...sessions].sort((a, b) => new Date(b.date) - new Date(a.date))
 
   return (
     <div
@@ -21,11 +21,11 @@ export default function SessionHistoryModal({ clientName, sessions, onClose }) {
         <p className="text-white/50 text-sm mt-0.5 mb-4">{clientName}</p>
 
         <div className="max-h-80 overflow-y-auto">
-          {reversed.length === 0 ? (
+          {sorted.length === 0 ? (
             <p className="text-white/40 text-sm text-center py-4">No sessions logged yet.</p>
           ) : (
             <ul className="flex flex-col gap-3">
-              {reversed.map(session => (
+              {sorted.map(session => (
                 <li key={session.id} className="border-b border-white/10 pb-3 last:border-0 last:pb-0">
                   <p className="text-sm text-white font-semibold">
                     {new Date(session.date).toLocaleDateString('en-US', {
