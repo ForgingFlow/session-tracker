@@ -51,7 +51,7 @@ export default function LoginScreen() {
         </div>
 
         {/* Card */}
-        <div className="bg-amber-dusk-darker rounded-2xl p-8">
+        <div className="bg-amber-dusk-darker rounded-2xl p-6 sm:p-8">
           <h1 className="font-display text-xl text-white mb-6">
             {isSignIn ? 'Sign in to your account' : 'Create your account'}
           </h1>

@@ -24,10 +24,10 @@ export default function LogSessionModal({ clientName, onConfirm, onCancel }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50"
       onClick={e => { if (e.target === e.currentTarget) onCancel() }}
     >
-      <div className="bg-amber-dusk-darker rounded-xl p-6 border border-white/10 w-full max-w-sm mx-4">
+      <div className="bg-amber-dusk-darker rounded-t-2xl sm:rounded-xl p-6 border border-white/10 w-full sm:max-w-sm sm:mx-4 max-h-[90vh] overflow-y-auto">
         <h2 className="text-white font-semibold text-lg font-display">Log Session</h2>
         <p className="text-white/50 text-sm mt-0.5 mb-4">{clientName}</p>
 

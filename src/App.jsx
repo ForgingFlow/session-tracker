@@ -350,7 +350,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-amber-dusk text-white">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto px-4 py-4 sm:py-8">
 
         {/* Header */}
         <header className="flex items-center justify-between mb-8">

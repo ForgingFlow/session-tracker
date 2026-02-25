@@ -105,9 +105,9 @@ export default function ClientCard({
         </div>
       )}
 
-      {/* Footer: last session timestamp + Plan / History / + Session buttons */}
-      <div className="flex items-center justify-between mt-3">
-        <p className="text-xs text-white/40">
+      {/* Footer: timestamp above, then full-width action buttons for easy tapping */}
+      <div className="mt-4 pt-3 border-t border-white/5">
+        <p className="text-xs text-white/40 mb-2.5">
           {days === null
             ? 'No sessions logged yet'
             : days === 0
@@ -116,23 +116,23 @@ export default function ClientCard({
             ? 'Last session: yesterday'
             : `Last session: ${days} days ago`}
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <button
             onClick={onAddPlan}
-            className="text-xs text-white/40 hover:text-white/80 transition-colors"
+            className="flex-1 py-2 text-xs text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
           >
             + Plan
           </button>
           <button
             onClick={onViewHistory}
-            className="text-xs text-white/40 hover:text-white/80 transition-colors"
+            className="flex-1 py-2 text-xs text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
           >
             History
           </button>
           {!isComplete && (
             <button
               onClick={onLogSession}
-              className="text-xs font-semibold bg-flow-orange/15 hover:bg-flow-orange/25 text-flow-orange border border-flow-orange/30 rounded-lg px-3 py-1 transition-colors"
+              className="flex-1 py-2 text-xs font-semibold bg-flow-orange/15 hover:bg-flow-orange/25 text-flow-orange border border-flow-orange/30 rounded-lg transition-colors"
             >
               + Session
             </button>
