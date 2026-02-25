@@ -4,11 +4,30 @@ function daysSince(dateString) {
   return Math.floor(diff / (1000 * 60 * 60 * 24))
 }
 
-export default function ClientCard({ client, onLogSession, onViewHistory, onDelete }) {
+// Format ISO date to a short readable string, e.g. "Feb 28"
+function formatDate(isoString) {
+  return new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+export default function ClientCard({
+  client,
+  onLogSession,
+  onViewHistory,
+  onDelete,
+  // Plan props
+  plans = [],
+  onAddPlan,
+  onViewPlan,
+  onCompletePlan,
+  onDeletePlan,
+}) {
   const { name, program, sessionsCompleted, totalSessions, lastSession } = client
   const progress = totalSessions > 0 ? (sessionsCompleted / totalSessions) * 100 : 0
   const isComplete = sessionsCompleted >= totalSessions
   const days = daysSince(lastSession)
+
+  // Sort plans ascending so the soonest upcoming session appears first
+  const sortedPlans = [...plans].sort((a, b) => a.date.localeCompare(b.date))
 
   return (
     <div className="bg-amber-dusk-darker rounded-xl p-5 border border-white/10">
@@ -56,8 +75,38 @@ export default function ClientCard({ client, onLogSession, onViewHistory, onDele
         </div>
       </div>
 
-      {/* Footer: last session timestamp + History / + Session buttons */}
-      <div className="flex items-center justify-between">
+      {/* Upcoming plans — only shown when at least one plan exists */}
+      {sortedPlans.length > 0 && (
+        <div className="mt-3 flex flex-col gap-1.5">
+          {sortedPlans.map(plan => (
+            <div
+              key={plan.id}
+              className="flex items-center justify-between bg-amber-dusk rounded-lg px-3 py-2 gap-2"
+            >
+              {/* Clickable area — opens the full plan view for on-call reference */}
+              <button
+                onClick={() => onViewPlan(plan.id)}
+                className="flex items-center gap-2 min-w-0 flex-1 text-left"
+              >
+                <span className="text-flow-orange text-xs shrink-0">{formatDate(plan.date)}</span>
+                <span className="truncate text-white/50 text-xs">{plan.scheme}</span>
+              </button>
+
+              {/* Delete */}
+              <button
+                onClick={() => onDeletePlan(plan.id)}
+                aria-label="Delete plan"
+                className="text-white/25 hover:text-red-400 transition-colors text-base leading-none shrink-0"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Footer: last session timestamp + Plan / History / + Session buttons */}
+      <div className="flex items-center justify-between mt-3">
         <p className="text-xs text-white/40">
           {days === null
             ? 'No sessions logged yet'
@@ -68,6 +117,12 @@ export default function ClientCard({ client, onLogSession, onViewHistory, onDele
             : `Last session: ${days} days ago`}
         </p>
         <div className="flex items-center gap-2">
+          <button
+            onClick={onAddPlan}
+            className="text-xs text-white/40 hover:text-white/80 transition-colors"
+          >
+            + Plan
+          </button>
           <button
             onClick={onViewHistory}
             className="text-xs text-white/40 hover:text-white/80 transition-colors"

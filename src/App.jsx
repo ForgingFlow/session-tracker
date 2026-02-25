@@ -8,6 +8,9 @@ import FilterBar from './components/FilterBar'
 import StatsBar from './components/StatsBar'
 import LogSessionModal from './components/LogSessionModal'
 import SessionHistoryModal from './components/SessionHistoryModal'
+import PlanModal from './components/PlanModal'
+import ViewPlanModal from './components/ViewPlanModal'
+import CompletePlanModal from './components/CompletePlanModal'
 
 // Returns the most recent Sunday at midnight (used to count sessions this week).
 function startOfWeek() {
@@ -29,6 +32,7 @@ function rowToClient(row) {
     totalSessions: row.total_sessions,
     lastSession: row.last_session,
     sessions: row.sessions ?? [],
+    plans: row.plans ?? [],
   }
 }
 
@@ -48,6 +52,12 @@ function App() {
   const [filter, setFilter] = useState('All')
   const [logSessionModal, setLogSessionModal] = useState(null)
   const [historyModal, setHistoryModal] = useState(null)
+  // planModal holds the client id whose plan creation form is open
+  const [planModal, setPlanModal] = useState(null)
+  // viewPlanModal holds { clientId, plan } when viewing a plan for reference
+  const [viewPlanModal, setViewPlanModal] = useState(null)
+  // completePlanModal holds { clientId, plan } when completing a plan
+  const [completePlanModal, setCompletePlanModal] = useState(null)
 
   // ── Auth listener ────────────────────────────────────────────────────────
   // On mount: check for an existing session, then subscribe to any changes
@@ -187,6 +197,131 @@ function App() {
     }
   }
 
+  async function handleDeleteSession(clientId, sessionId) {
+    const client = clients.find(c => c.id === clientId)
+    if (!client) return
+
+    const updatedSessions = client.sessions.filter(s => s.id !== sessionId)
+    const updatedCompleted = Math.max(0, client.sessionsCompleted - 1)
+    const lastSession = updatedSessions.length > 0
+      ? updatedSessions.reduce((latest, s) => s.date > latest ? s.date : latest, '')
+      : null
+    const now = new Date().toISOString()
+
+    setError(null)
+    const { data, error } = await supabase
+      .from('clients')
+      .update({
+        sessions_completed: updatedCompleted,
+        last_session: lastSession,
+        sessions: updatedSessions,
+        updated_at: now,
+      })
+      .eq('id', clientId)
+      .select()
+      .single()
+
+    if (error) {
+      setError('Failed to delete session: ' + error.message)
+    } else {
+      setClients(prev => prev.map(c => (c.id === clientId ? rowToClient(data) : c)))
+    }
+  }
+
+  // ── Plan operations ───────────────────────────────────────────────────────
+
+  async function handleAddPlan(clientId, date, scheme) {
+    const client = clients.find(c => c.id === clientId)
+    if (!client) return
+
+    // Store at noon local time so the date doesn't shift when displayed
+    const newPlan = {
+      id: Date.now(),
+      date: new Date(date + 'T12:00:00').toISOString(),
+      scheme,
+    }
+    const updatedPlans = [...client.plans, newPlan]
+    const now = new Date().toISOString()
+
+    setError(null)
+    const { data, error } = await supabase
+      .from('clients')
+      .update({ plans: updatedPlans, updated_at: now })
+      .eq('id', clientId)
+      .select()
+      .single()
+
+    if (error) {
+      setError('Failed to save plan: ' + error.message)
+    } else {
+      setClients(prev => prev.map(c => (c.id === clientId ? rowToClient(data) : c)))
+      setPlanModal(null)
+    }
+  }
+
+  async function handleCompletePlan(clientId, planId, date, note) {
+    const client = clients.find(c => c.id === clientId)
+    if (!client) return
+
+    const sessionDate = new Date(date + 'T12:00:00').toISOString()
+    const now = new Date().toISOString()
+
+    // Remove the completed plan and add the new session entry.
+    // Save the scheme onto the session so it can be referenced in history.
+    const plan = client.plans.find(p => p.id === planId)
+    const updatedPlans = client.plans.filter(p => p.id !== planId)
+    const updatedSessions = [...client.sessions, { id: Date.now(), date: sessionDate, note: note ?? '', scheme: plan?.scheme ?? '' }]
+    const updatedCompleted = client.sessionsCompleted + 1
+
+    // last_session should always reflect the most recent session date
+    const lastSession = updatedSessions.reduce((latest, s) =>
+      s.date > latest ? s.date : latest, ''
+    )
+
+    setError(null)
+    const { data, error } = await supabase
+      .from('clients')
+      .update({
+        plans: updatedPlans,
+        sessions: updatedSessions,
+        sessions_completed: updatedCompleted,
+        last_session: lastSession,
+        updated_at: now,
+      })
+      .eq('id', clientId)
+      .select()
+      .single()
+
+    if (error) {
+      setError('Failed to complete session: ' + error.message)
+    } else {
+      setClients(prev => prev.map(c => (c.id === clientId ? rowToClient(data) : c)))
+      setCompletePlanModal(null)
+    }
+  }
+
+  async function handleDeletePlan(clientId, planId) {
+    const client = clients.find(c => c.id === clientId)
+    if (!client) return
+
+    const updatedPlans = client.plans.filter(p => p.id !== planId)
+    const now = new Date().toISOString()
+
+    setError(null)
+    const { data, error } = await supabase
+      .from('clients')
+      .update({ plans: updatedPlans, updated_at: now })
+      .eq('id', clientId)
+      .select()
+      .single()
+
+    if (error) {
+      setError('Failed to delete plan: ' + error.message)
+    } else {
+      setClients(prev => prev.map(c => (c.id === clientId ? rowToClient(data) : c)))
+    }
+  }
+
   async function handleSignOut() {
     await supabase.auth.signOut()
     // onAuthStateChange will fire and set user → null, which clears clients too.
@@ -279,6 +414,11 @@ function App() {
               onLogSession={() => setLogSessionModal(client.id)}
               onViewHistory={() => setHistoryModal(client.id)}
               onDelete={() => handleDeleteClient(client.id)}
+              plans={client.plans}
+              onAddPlan={() => setPlanModal(client.id)}
+              onViewPlan={planId => setViewPlanModal({ clientId: client.id, plan: client.plans.find(p => p.id === planId) })}
+              onCompletePlan={planId => setCompletePlanModal({ clientId: client.id, plan: client.plans.find(p => p.id === planId) })}
+              onDeletePlan={planId => handleDeletePlan(client.id, planId)}
             />
           ))}
         </div>
@@ -297,6 +437,37 @@ function App() {
           clientName={historyClient.name}
           sessions={historyClient.sessions}
           onClose={() => setHistoryModal(null)}
+          onDeleteSession={sessionId => handleDeleteSession(historyModal, sessionId)}
+        />
+      )}
+
+      {planModal !== null && (
+        <PlanModal
+          clientName={clients.find(c => c.id === planModal)?.name ?? ''}
+          onConfirm={(date, scheme) => handleAddPlan(planModal, date, scheme)}
+          onCancel={() => setPlanModal(null)}
+        />
+      )}
+
+      {viewPlanModal !== null && (
+        <ViewPlanModal
+          clientName={clients.find(c => c.id === viewPlanModal.clientId)?.name ?? ''}
+          plan={viewPlanModal.plan}
+          onComplete={() => {
+            // Transition from view → complete without losing the plan context
+            setCompletePlanModal(viewPlanModal)
+            setViewPlanModal(null)
+          }}
+          onClose={() => setViewPlanModal(null)}
+        />
+      )}
+
+      {completePlanModal !== null && (
+        <CompletePlanModal
+          clientName={clients.find(c => c.id === completePlanModal.clientId)?.name ?? ''}
+          plan={completePlanModal.plan}
+          onConfirm={(date, note) => handleCompletePlan(completePlanModal.clientId, completePlanModal.plan.id, date, note)}
+          onCancel={() => setCompletePlanModal(null)}
         />
       )}
     </div>
